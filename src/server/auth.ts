@@ -8,6 +8,7 @@ import {
 import DiscordProvider from "next-auth/providers/discord";
 import { env } from "@/env.mjs";
 import { prisma } from "@/server/db";
+import Credentials from "next-auth/providers/credentials";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -47,9 +48,21 @@ export const authOptions: NextAuthOptions = {
   },
   adapter: PrismaAdapter(prisma),
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    // DiscordProvider({
+    //   clientId: env.DISCORD_CLIENT_ID,
+    //   clientSecret: env.DISCORD_CLIENT_SECRET,
+    // }),
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        // password: { label: "Password", type: "password" },
+      },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async authorize(credentials, _req) {
+        const user =  { id: 1, name: credentials?.username ?? "J Smith" };
+        return user;
+      },
     }),
     /**
      * ...add more providers here.
@@ -61,6 +74,10 @@ export const authOptions: NextAuthOptions = {
      * @see https://next-auth.js.org/providers/github
      */
   ],
+  secret: env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
 };
 
 /**
